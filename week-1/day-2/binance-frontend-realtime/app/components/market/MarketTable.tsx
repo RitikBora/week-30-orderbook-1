@@ -1,6 +1,7 @@
 "use client";
 import {  getAllKlines, getMarketData, getTickers } from "@/app/utils/httpClient";
 import {  Market, MarketData, Ticker } from "@/app/utils/types";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react"
 
@@ -9,6 +10,7 @@ export const MarketTable= () =>
 {
     const marketDataMap = new Map(); 
     const [market , setMarket] = useState<Market[]>([]);
+    const[loading , setLoading] = useState(true);
     const router = useRouter();
    
 
@@ -48,6 +50,7 @@ export const MarketTable= () =>
                 updatedMarkets.sort((a, b) => b.market_cap - a.market_cap);
                 
                 setMarket(updatedMarkets);
+                setLoading(false);
             } catch (error) {
                 console.error('Failed to fetch data:', error);
             }
@@ -58,22 +61,22 @@ export const MarketTable= () =>
  
 
     return (
-        <table className="w-full table-auto">
-           <thead>
+        <table className="w-full border-separate border-spacing-y-4">
+            <thead>
                 <tr>
-                    <th className="px-2 py-3 text-left text-sm font-normal text-baseTextMedEmphasis first:pl-7 first:pr-0 last:pl-0 last:pr-7">
-                        <div className="flex items-center gap-1 cursor-pointer select-none">
-                            Name
-                            <span className="w-[16px]"></span>
-                        </div>
-                    </th>
-                    <th className="px-2 py-3 text-left text-sm font-normal text-baseTextMedEmphasis first:pl-7 first:pr-0 last:pl-0 last:pr-7">
+                <th className="px-2 py-3 w-1/3 text-left text-5xl font-normal text-baseTextMedEmphasis">
+                    <div className="flex items-center gap-1 select-none">
+                        Name
+                        <span className="w-[16px]"></span>
+                    </div>
+                </th>
+                 <th className="px-2 py-3 w-1/6 text-left text-xl font-normal text-baseTextMedEmphasis ">
                         <div className="flex items-center gap-1 cursor-pointer select-none">
                             Price
                             <span className="w-[16px]"></span>
                         </div>
                     </th>
-                    <th className="px-2 py-3 text-left text-sm font-normal text-baseTextMedEmphasis first:pl-7 first:pr-0 last:pl-0 last:pr-7">
+                    <th className="px-2 py-3 w-1/6 text-left text-xl font-normal text-baseTextMedEmphasis ">
                         <div className="flex items-center gap-1 cursor-pointer select-none">
                             Market Cap
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-arrow-down h-4 w-4">
@@ -81,13 +84,13 @@ export const MarketTable= () =>
                             </svg>
                         </div>
                     </th>
-                    <th className="px-2 py-3 text-left text-sm font-normal text-baseTextMedEmphasis first:pl-7 first:pr-0 last:pl-0 last:pr-7">
+                    <th className="px-2 py-3 w-1/6 text-left text-xl font-normal text-baseTextMedEmphasis ">
                         <div className="flex items-center gap-1 cursor-pointer select-none">
                             24h Volume
                             <span className="w-[16px]"></span>
                         </div>
                     </th>
-                    <th className="px-2 py-3 text-left text-sm font-normal text-baseTextMedEmphasis first:pl-7 first:pr-0 last:pl-0 last:pr-7">
+                    <th className="px-2 py-3 w-1/6 text-left text-xl font-normal text-baseTextMedEmphasis ">
                         <div className="flex items-center gap-1 cursor-pointer select-none">
                             24h Change
                             <span className="w-[16px]"></span>
@@ -95,11 +98,20 @@ export const MarketTable= () =>
                     </th>
                 </tr>
             </thead>
-            <tbody>
-                {market.map((coin : Market) =>
-                {
-                    return <MarketRow price={coin.lastPrice} symbol={coin.symbol}  name = {coin.name}  market_cap ={coin.market_cap}  quoteVolume= {coin.quoteVolume} image = {coin.image} priceChangePercent = {coin.priceChangePercent} marketSymbol = {coin.marketSymbol} router = {router}/>
-                })}
+             <tbody >
+               {
+                loading ? <>
+                     {Array.from({ length: 8}).map((_, index) => (
+                    <SkeletonRow/>
+                    ))}
+                </>:
+                <>
+                    {market.map((coin : Market) =>
+                    {
+                        return <MarketRow price={coin.lastPrice} symbol={coin.symbol}  name = {coin.name}  market_cap ={coin.market_cap}  quoteVolume= {coin.quoteVolume} image = {coin.image} priceChangePercent = {coin.priceChangePercent} marketSymbol = {coin.marketSymbol} router = {router}/>
+                    })}
+                </>
+               }
             </tbody>
         </table>
     )
@@ -108,7 +120,7 @@ export const MarketTable= () =>
 function MarketRow({price , symbol , name , market_cap , image , priceChangePercent , quoteVolume , marketSymbol , router} : {price : string , symbol : string , name : string  , market_cap : number  , image : string , priceChangePercent : string , quoteVolume: string , marketSymbol : string , router : any}) {
     return (
         <tr className="cursor-pointer border-t border-baseBorderLight hover:bg-slate-800" onClick={() => router.push(`/trade/${marketSymbol}`) }>
-                        <td className="px-2 py-3 first:pl-7 first:pr-0 last:pl-0 last:pr-7">
+                        <td className="px-2 py-3 ">
                             <div className="flex shrink">
                                 <div className="flex items-center undefined">
                                     <div className="relative flex-none overflow-hidden rounded-full border border-baseBorderMed w-10 h-10" >
@@ -125,22 +137,40 @@ function MarketRow({price , symbol , name , market_cap , image , priceChangePerc
                             </div>
                         </div>
                     </td>
-                    <td className="px-2 py-3 first:pl-7 first:pr-0 last:pl-0 last:pr-7">
+                    <td className="px-2 py-3 ">
                         <p className="text-base font-medium tabular-nums">${price}</p>
                     </td>
-                    <td className="px-2 py-3 first:pl-7 first:pr-0 last:pl-0 last:pr-7">
+                    <td className="px-2 py-3 ">
                         <p className="text-base font-medium tabular-nums">{formatMarketCap(market_cap)}</p>
                     </td>
-                    <td className="px-2 py-3 first:pl-7 first:pr-0 last:pl-0 last:pr-7">
+                    <td className="px-2 py-3 ">
                         <p className="text-base font-medium tabular-nums">{formatMarketCap(Number(quoteVolume))}</p>
                     </td>
-                    <td className="px-2 py-3 first:pl-7 first:pr-0 last:pl-0 last:pr-7">
+                    <td className="px-2 py-3 ">
                         <PricePercent priceChangePercent={priceChangePercent}/>
                     </td>
                    
                 </tr>
     )
 }
+
+
+function SkeletonRow() {
+    return (
+        <tr>
+          
+            <td className="px-2 py-3 w-1/6">
+                <Skeleton className="w-full h-[35px] rounded-xl bg-neutral-700 animate-pulse" />
+            </td>
+            
+            <td className="px-2 py-3 w-5/6" colSpan={4}>
+                <Skeleton className="w-full h-[35px] rounded-xl bg-neutral-700 animate-pulse" />
+            </td>
+        </tr>
+    );
+}
+
+
 
 
 function formatMarketCap(num : number) {

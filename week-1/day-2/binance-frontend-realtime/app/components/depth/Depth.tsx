@@ -49,7 +49,7 @@ export function Depth({ market }: {market: string}) {
 
         const itemIndex = prevItems.findIndex((i : any) => i[0] === price);
 
-        if (size === "0.00") {
+        if (/^0+(\.0+)?$/.test(size)) {
             if (itemIndex !== -1) {
                 newItems.splice(itemIndex, 1);
             }
